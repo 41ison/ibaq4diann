@@ -145,6 +145,7 @@ plot_ibaq_rank <- function(
   }
 
   if (top_n_labels > 0 && nrow(label_data) > 0) {
+    rlang::check_installed("ggrepel", reason = "to label top-ranked proteins.")
     p <- p +
       ggrepel::geom_text_repel(
         data = label_data,

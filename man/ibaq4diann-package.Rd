@@ -17,7 +17,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Alison Felipe Alencar Chaves \email{alison.chaves@example.com}
+\strong{Maintainer}: Alison Chaves \email{felipealison@gmail.com}
 
 }
 \keyword{internal}
