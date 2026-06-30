@@ -3,7 +3,6 @@ Title: iBAQ Calculation from DIA-NN Proteomics Reports
 Version: 0.1.0
 Authors@R: 
     person("Alison Felipe Alencar Chaves", role = c("aut", "cre"),
-           email = "alison.chaves@example.com",
            comment = c(ORCID = ""))
 Description: Computes intensity-Based Absolute Quantification (iBAQ) values
     from DIA-NN search results (report.parquet files) and a reference proteome
