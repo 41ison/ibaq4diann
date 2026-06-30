@@ -118,26 +118,26 @@
 #'
 #' # ── Custom intensity column and relaxed filters ─────────────────────────────
 #' ibaq_raw <- compute_ibaq(
-#'   parquet_path          = "report.parquet",
-#'   fasta_path            = "UP000031575.fasta",
-#'   intensity_col         = "Precursor.Quantity",   # raw (non-normalised)
-#'   q_value_cutoff        = 0.01,
-#'   pg_q_value_cutoff     = 0.01,
+#'   parquet_path = "report.parquet",
+#'   fasta_path = "UP000031575.fasta",
+#'   intensity_col = "Precursor.Quantity",   # raw (non-normalised)
+#'   q_value_cutoff = 0.01,
+#'   pg_q_value_cutoff = 0.01,
 #'   lib_pg_q_value_cutoff = 0.01,
-#'   proteotypic_only      = TRUE,
-#'   lfq_quality_cutoff    = NULL,                   # skip LFQ quality filter
-#'   min_peptide_len       = 7,
-#'   max_peptide_len       = 25,
-#'   max_missed_cleavages  = 1,
-#'   log2_transform        = FALSE,                  # return linear iBAQ
-#'   output_long           = FALSE
+#'   proteotypic_only = TRUE,
+#'   lfq_quality_cutoff = NULL,              # skip LFQ quality filter
+#'   min_peptide_len = 7,
+#'   max_peptide_len = 25,
+#'   max_missed_cleavages = 1,
+#'   log2_transform = FALSE,                  # return linear iBAQ
+#'   output_long = FALSE
 #' )
 #'
 #' # ── Long format output (tidy) ───────────────────────────────────────────────
 #' ibaq_long <- compute_ibaq(
 #'   parquet_path = "report.parquet",
-#'   fasta_path   = "UP000031575.fasta",
-#'   output_long  = TRUE
+#'   fasta_path = "UP000031575.fasta",
+#'   output_long = TRUE
 #' )
 #'
 #' # ── Save results to TSV ─────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ compute_ibaq <- function(
 ) {
   stopifnot(
     "parquet_path must be a character string" = is.character(parquet_path),
-    "fasta_path must be a character string"   = is.character(fasta_path),
+    "fasta_path must be a character string" = is.character(fasta_path),
     file.exists(parquet_path),
     file.exists(fasta_path)
   )
@@ -172,7 +172,11 @@ compute_ibaq <- function(
   message("\n=== Step 1: Loading DIA-NN report ===")
   report <- arrow::read_parquet(parquet_path)
   message(
-    "[compute_ibaq] Loaded ", nrow(report), " rows, ", ncol(report), " columns."
+    "[compute_ibaq] Loaded ",
+    nrow(report),
+    " rows, ",
+    ncol(report),
+    " columns."
   )
 
   # Validate required columns
@@ -189,11 +193,11 @@ compute_ibaq <- function(
   message("\n=== Step 2: Quality filtering ===")
   report_filtered <- filter_diann_report(
     report,
-    q_value_cutoff        = q_value_cutoff,
-    pg_q_value_cutoff     = pg_q_value_cutoff,
+    q_value_cutoff = q_value_cutoff,
+    pg_q_value_cutoff = pg_q_value_cutoff,
     lib_pg_q_value_cutoff = lib_pg_q_value_cutoff,
-    proteotypic_only      = proteotypic_only,
-    lfq_quality_cutoff    = lfq_quality_cutoff
+    proteotypic_only = proteotypic_only,
+    lfq_quality_cutoff = lfq_quality_cutoff
   )
 
   if (nrow(report_filtered) == 0) {
@@ -211,7 +215,10 @@ compute_ibaq <- function(
 
   # Build a consistent annotation lookup (one row per protein_id)
   annot_lookup <- report_filtered |>
-    dplyr::select(protein_id = dplyr::all_of(id_col), dplyr::all_of(annot_cols)) |>
+    dplyr::select(
+      protein_id = dplyr::all_of(id_col),
+      dplyr::all_of(annot_cols)
+    ) |>
     dplyr::distinct(.data$protein_id, .keep_all = TRUE)
 
   # Sum intensity per unique stripped peptide per protein × sample, then
@@ -221,7 +228,7 @@ compute_ibaq <- function(
   protein_intensity <- report_filtered |>
     dplyr::rename(
       protein_id = dplyr::all_of(id_col),
-      intensity  = dplyr::all_of(intensity_col)
+      intensity = dplyr::all_of(intensity_col)
     ) |>
     dplyr::group_by(.data$Run, .data$protein_id, .data$Stripped.Sequence) |>
     dplyr::summarise(
@@ -246,18 +253,18 @@ compute_ibaq <- function(
   message(
     "\n=== Step 4: Parsing FASTA & counting theoretical tryptic peptides ==="
   )
-  sequences  <- parse_fasta(fasta_path, id_pattern = fasta_id_pattern)
+  sequences <- parse_fasta(fasta_path, id_pattern = fasta_id_pattern)
   theo_peptides <- build_theoretical_peptide_counts(
     sequences,
     protease_regex = protease_regex,
-    min_len        = min_peptide_len,
-    max_len        = max_peptide_len,
-    max_missed     = max_missed_cleavages
+    min_len = min_peptide_len,
+    max_len = max_peptide_len,
+    max_missed = max_missed_cleavages
   )
 
   # Check coverage of detected proteins against the FASTA
   detected_proteins <- unique(protein_intensity$protein_id)
-  n_found   <- sum(detected_proteins %in% theo_peptides$protein_id)
+  n_found <- sum(detected_proteins %in% theo_peptides$protein_id)
   n_missing <- length(detected_proteins) - n_found
 
   if (n_missing > 0) {
@@ -276,7 +283,10 @@ compute_ibaq <- function(
     )
   }
   message(
-    "[compute_ibaq] ", n_found, " / ", length(detected_proteins),
+    "[compute_ibaq] ",
+    n_found,
+    " / ",
+    length(detected_proteins),
     " detected proteins matched in FASTA."
   )
 
@@ -285,10 +295,10 @@ compute_ibaq <- function(
 
   ibaq_long <- protein_intensity |>
     dplyr::left_join(theo_peptides, by = "protein_id") |>
-    dplyr::left_join(annot_lookup,  by = "protein_id") |>
+    dplyr::left_join(annot_lookup, by = "protein_id") |>
     dplyr::filter(
       !is.na(.data$n_theoretical_peptides),
-      .data$n_theoretical_peptides > 0   # guard against division by zero
+      .data$n_theoretical_peptides > 0 # guard against division by zero
     ) |>
     dplyr::mutate(
       iBAQ = .data$sum_intensity / .data$n_theoretical_peptides
@@ -316,17 +326,20 @@ compute_ibaq <- function(
     result <- ibaq_long |>
       dplyr::select(dplyr::all_of(c(annot_final_cols, "Run", "iBAQ"))) |>
       tidyr::pivot_wider(
-        id_cols     = dplyr::all_of(annot_final_cols),
-        names_from  = "Run",
+        id_cols = dplyr::all_of(annot_final_cols),
+        names_from = "Run",
         values_from = "iBAQ"
       ) |>
       dplyr::arrange(.data$protein_id)
 
-    n_prot    <- nrow(result)
+    n_prot <- nrow(result)
     n_samples <- ncol(result) - length(annot_final_cols)
     message(
       "[compute_ibaq] Output: wide format — ",
-      n_prot, " proteins \u00d7 ", n_samples, " samples."
+      n_prot,
+      " proteins \u00d7 ",
+      n_samples,
+      " samples."
     )
   }
 

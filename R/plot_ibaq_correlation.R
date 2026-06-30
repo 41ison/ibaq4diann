@@ -38,34 +38,41 @@
 #' # Spearman correlation, no value labels
 #' p <- plot_ibaq_correlation(
 #'   ibaq,
-#'   method      = "spearman",
+#'   method = "spearman",
 #'   show_values = FALSE
 #' )
 #' ggplot2::ggsave("correlation_heatmap.pdf", p, width = 8, height = 7)
 #' }
 plot_ibaq_correlation <- function(
   ibaq,
-  samples      = NULL,
-  method       = c("pearson", "spearman"),
-  log2_values  = TRUE,
-  low_color    = "#f7fbff",
-  high_color   = "#08306b",
-  show_values  = TRUE,
-  digits       = 2
+  samples = NULL,
+  method = c("pearson", "spearman"),
+  log2_values = TRUE,
+  low_color = "#f7fbff",
+  high_color = "#08306b",
+  show_values = TRUE,
+  digits = 2
 ) {
   method <- match.arg(method)
 
   # ---- Wide → long conversion ------------------------------------------------
-  meta_cols    <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
+  meta_cols <- c(
+    "protein_id",
+    "Protein.Names",
+    "Genes",
+    "n_theoretical_peptides"
+  )
   meta_present <- intersect(meta_cols, names(ibaq))
 
   if (!"sample" %in% names(ibaq)) {
     sample_cols <- setdiff(names(ibaq), meta_present)
-    if (!is.null(samples)) sample_cols <- intersect(sample_cols, samples)
+    if (!is.null(samples)) {
+      sample_cols <- intersect(sample_cols, samples)
+    }
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
-      cols      = dplyr::all_of(sample_cols),
-      names_to  = "sample",
+      cols = dplyr::all_of(sample_cols),
+      names_to = "sample",
       values_to = "iBAQ"
     )
   } else {
@@ -95,8 +102,8 @@ plot_ibaq_correlation <- function(
   cor_df$sample_x <- rownames(cor_df)
   cor_long <- tidyr::pivot_longer(
     cor_df,
-    cols      = -"sample_x",
-    names_to  = "sample_y",
+    cols = -"sample_x",
+    names_to = "sample_y",
     values_to = "correlation"
   )
 
@@ -107,17 +114,21 @@ plot_ibaq_correlation <- function(
 
   p <- ggplot2::ggplot(
     cor_long,
-    ggplot2::aes(x = .data$sample_x, y = .data$sample_y, fill = .data$correlation)
+    ggplot2::aes(
+      x = .data$sample_x,
+      y = .data$sample_y,
+      fill = .data$correlation
+    )
   ) +
     ggplot2::geom_tile(colour = "white", linewidth = 0.5) +
     ggplot2::scale_fill_gradient(
-      low    = low_color,
-      high   = high_color,
+      low = low_color,
+      high = high_color,
       limits = c(NA, 1),
-      name   = paste0(tools::toTitleCase(method), "\ncorrelation")
+      name = paste0(tools::toTitleCase(method), "\ncorrelation")
     ) +
     ggplot2::labs(
-      title    = "Sample-to-Sample Correlation Heatmap",
+      title = "Sample-to-Sample Correlation Heatmap",
       subtitle = paste0(
         tools::toTitleCase(method),
         " correlation of iBAQ values across samples"
@@ -128,16 +139,17 @@ plot_ibaq_correlation <- function(
     ggplot2::coord_fixed() +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(
-      axis.text.x      = ggplot2::element_text(angle = 45, hjust = 1),
-      panel.grid        = ggplot2::element_blank()
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      panel.grid = ggplot2::element_blank()
     )
 
   if (isTRUE(show_values)) {
-    p <- p + ggplot2::geom_text(
-      ggplot2::aes(label = round(.data$correlation, digits)),
-      size = 3,
-      colour = "grey20"
-    )
+    p <- p +
+      ggplot2::geom_text(
+        ggplot2::aes(label = round(.data$correlation, digits)),
+        size = 2,
+        colour = "grey20"
+      )
   }
 
   p

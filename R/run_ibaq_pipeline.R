@@ -33,29 +33,29 @@
 #' # ── Minimal call (all defaults) ─────────────────────────────────────────────
 #' run_ibaq_pipeline(
 #'   parquet_path = "report.parquet",
-#'   fasta_path   = "UP000031575.fasta"
+#'   fasta_path = "UP000031575.fasta"
 #' )
 #'
 #' # ── Save to a custom path with extra parameters ─────────────────────────────
 #' result <- run_ibaq_pipeline(
-#'   parquet_path   = "data/report.parquet",
-#'   fasta_path     = "data/proteome.fasta",
-#'   output_path    = "results/iBAQ_results.tsv",
+#'   parquet_path = "data/report.parquet",
+#'   fasta_path = "data/proteome.fasta",
+#'   output_path = "results/iBAQ_results.tsv",
 #'   log2_transform = FALSE,
-#'   output_long    = TRUE
+#'   output_long = TRUE
 #' )
 #'
 #' head(result)
 #' }
 run_ibaq_pipeline <- function(
   parquet_path = "report.parquet",
-  fasta_path   = "proteome.fasta",
-  output_path  = "iBAQ_results.tsv",
+  fasta_path = "proteome.fasta",
+  output_path = "iBAQ_results.tsv",
   ...
 ) {
   result <- compute_ibaq(
     parquet_path = parquet_path,
-    fasta_path   = fasta_path,
+    fasta_path = fasta_path,
     ...
   )
 

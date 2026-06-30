@@ -59,8 +59,8 @@ plot_ibaq_dynamic_range(ibaq)
 # Subset to specific samples, hide protein count labels
 p <- plot_ibaq_dynamic_range(
   ibaq,
-  samples          = c("sample_A", "sample_B"),
-  show_n_proteins  = FALSE
+  samples = c("sample_A", "sample_B"),
+  show_n_proteins = FALSE
 )
 ggplot2::ggsave("dynamic_range.pdf", p, width = 8, height = 6)
 }

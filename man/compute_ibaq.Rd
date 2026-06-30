@@ -162,26 +162,26 @@ dim(ibaq)
 
 # ── Custom intensity column and relaxed filters ─────────────────────────────
 ibaq_raw <- compute_ibaq(
-  parquet_path          = "report.parquet",
-  fasta_path            = "UP000031575.fasta",
-  intensity_col         = "Precursor.Quantity",   # raw (non-normalised)
-  q_value_cutoff        = 0.01,
-  pg_q_value_cutoff     = 0.01,
+  parquet_path = "report.parquet",
+  fasta_path = "UP000031575.fasta",
+  intensity_col = "Precursor.Quantity",   # raw (non-normalised)
+  q_value_cutoff = 0.01,
+  pg_q_value_cutoff = 0.01,
   lib_pg_q_value_cutoff = 0.01,
-  proteotypic_only      = TRUE,
-  lfq_quality_cutoff    = NULL,                   # skip LFQ quality filter
-  min_peptide_len       = 7,
-  max_peptide_len       = 25,
-  max_missed_cleavages  = 1,
-  log2_transform        = FALSE,                  # return linear iBAQ
-  output_long           = FALSE
+  proteotypic_only = TRUE,
+  lfq_quality_cutoff = NULL,              # skip LFQ quality filter
+  min_peptide_len = 7,
+  max_peptide_len = 25,
+  max_missed_cleavages = 1,
+  log2_transform = FALSE,                  # return linear iBAQ
+  output_long = FALSE
 )
 
 # ── Long format output (tidy) ───────────────────────────────────────────────
 ibaq_long <- compute_ibaq(
   parquet_path = "report.parquet",
-  fasta_path   = "UP000031575.fasta",
-  output_long  = TRUE
+  fasta_path = "UP000031575.fasta",
+  output_long = TRUE
 )
 
 # ── Save results to TSV ─────────────────────────────────────────────────────

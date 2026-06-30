@@ -60,7 +60,7 @@ plot_ibaq_correlation(ibaq)
 # Spearman correlation, no value labels
 p <- plot_ibaq_correlation(
   ibaq,
-  method      = "spearman",
+  method = "spearman",
   show_values = FALSE
 )
 ggplot2::ggsave("correlation_heatmap.pdf", p, width = 8, height = 7)

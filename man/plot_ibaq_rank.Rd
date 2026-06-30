@@ -69,9 +69,9 @@ print(p)
 # ── Subset to two samples, label top 5 proteins ────────────────────────────
 p2 <- plot_ibaq_rank(
   ibaq,
-  samples      = c("sample_A", "sample_B"),
+  samples = c("sample_A", "sample_B"),
   top_n_labels = 5,
-  label_col    = "Genes"
+  label_col = "Genes"
 )
 ggplot2::ggsave("rank_abundance.pdf", p2, width = 10, height = 5)
 }

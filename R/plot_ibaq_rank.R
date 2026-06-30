@@ -47,24 +47,29 @@
 #' # ── Subset to two samples, label top 5 proteins ────────────────────────────
 #' p2 <- plot_ibaq_rank(
 #'   ibaq,
-#'   samples      = c("sample_A", "sample_B"),
+#'   samples = c("sample_A", "sample_B"),
 #'   top_n_labels = 5,
-#'   label_col    = "Genes"
+#'   label_col = "Genes"
 #' )
 #' ggplot2::ggsave("rank_abundance.pdf", p2, width = 10, height = 5)
 #' }
 plot_ibaq_rank <- function(
   ibaq,
-  samples      = NULL,
-  log2_values  = TRUE,
+  samples = NULL,
+  log2_values = TRUE,
   top_n_labels = 10,
-  label_col    = "Protein.Names",
-  point_size   = 0.8,
-  point_alpha  = 0.6,
+  label_col = "Protein.Names",
+  point_size = 0.8,
+  point_alpha = 0.6,
   color_palette = NULL
 ) {
   # ---- Determine metadata columns -------------------------------------------
-  meta_cols <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
+  meta_cols <- c(
+    "protein_id",
+    "Protein.Names",
+    "Genes",
+    "n_theoretical_peptides"
+  )
   meta_present <- intersect(meta_cols, names(ibaq))
 
   # ---- Convert wide → long if needed ----------------------------------------
@@ -75,8 +80,8 @@ plot_ibaq_rank <- function(
     }
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
-      cols      = dplyr::all_of(sample_cols),
-      names_to  = "sample",
+      cols = dplyr::all_of(sample_cols),
+      names_to = "sample",
       values_to = "iBAQ"
     )
   } else {
@@ -113,26 +118,26 @@ plot_ibaq_rank <- function(
   p <- ggplot2::ggplot(
     ibaq_long,
     ggplot2::aes(
-      x     = .data$rank,
-      y     = .data$iBAQ,
+      x = .data$rank,
+      y = .data$iBAQ,
       colour = .data$sample
     )
   ) +
     ggplot2::geom_point(size = point_size, alpha = point_alpha) +
-    ggplot2::facet_wrap(~ sample, scales = "free_x") +
+    ggplot2::facet_wrap(~sample, scales = "free_x") +
     ggplot2::labs(
-      title    = "Ranked Protein Abundances",
+      title = "Ranked Protein Abundances",
       subtitle = "Proteins ranked from most to least abundant (iBAQ)",
-      x        = "Protein rank",
-      y        = y_label,
-      colour   = "Sample"
+      x = "Protein rank",
+      y = y_label,
+      colour = "Sample"
     ) +
     ggplot2::theme_bw(base_size = 12) +
     ggplot2::theme(
-      strip.background  = ggplot2::element_rect(fill = "#2d3561", colour = NA),
-      strip.text        = ggplot2::element_text(colour = "white", face = "bold"),
-      panel.grid.minor  = ggplot2::element_blank(),
-      legend.position   = "none"
+      strip.background = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(colour = "white", face = "bold"),
+      panel.grid.minor = ggplot2::element_blank(),
+      legend.position = "none"
     )
 
   if (!is.null(color_palette)) {
@@ -140,14 +145,15 @@ plot_ibaq_rank <- function(
   }
 
   if (top_n_labels > 0 && nrow(label_data) > 0) {
-    p <- p + ggplot2::geom_text(
-      data    = label_data,
-      mapping = ggplot2::aes(label = .data[[label_col]]),
-      size    = 2.5,
-      hjust   = -0.15,
-      colour  = "grey20",
-      show.legend = FALSE
-    )
+    p <- p +
+      ggplot2::geom_text(
+        data = label_data,
+        mapping = ggplot2::aes(label = .data[[label_col]]),
+        size = 2.5,
+        hjust = -0.15,
+        colour = "grey20",
+        show.legend = FALSE
+      )
   }
 
   p

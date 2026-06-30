@@ -39,26 +39,34 @@
 #' # Subset to specific samples, hide protein count labels
 #' p <- plot_ibaq_dynamic_range(
 #'   ibaq,
-#'   samples          = c("sample_A", "sample_B"),
-#'   show_n_proteins  = FALSE
+#'   samples = c("sample_A", "sample_B"),
+#'   show_n_proteins = FALSE
 #' )
 #' ggplot2::ggsave("dynamic_range.pdf", p, width = 8, height = 6)
 #' }
 plot_ibaq_dynamic_range <- function(
-    ibaq,
-    samples = NULL,
-    log2_values = TRUE,
-    show_n_proteins = TRUE,
-    point_size = 3,
-    segment_linewidth = 1.2,
-    color_palette = NULL) {
+  ibaq,
+  samples = NULL,
+  log2_values = TRUE,
+  show_n_proteins = TRUE,
+  point_size = 3,
+  segment_linewidth = 1.2,
+  color_palette = NULL
+) {
   # ---- Wide → long conversion ------------------------------------------------
-  meta_cols <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
+  meta_cols <- c(
+    "protein_id",
+    "Protein.Names",
+    "Genes",
+    "n_theoretical_peptides"
+  )
   meta_present <- intersect(meta_cols, names(ibaq))
 
   if (!"sample" %in% names(ibaq)) {
     sample_cols <- setdiff(names(ibaq), meta_present)
-    if (!is.null(samples)) sample_cols <- intersect(sample_cols, samples)
+    if (!is.null(samples)) {
+      sample_cols <- intersect(sample_cols, samples)
+    }
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
       cols = dplyr::all_of(sample_cols),
@@ -95,7 +103,7 @@ plot_ibaq_dynamic_range <- function(
     ggplot2::geom_segment(
       ggplot2::aes(
         xend = .data$sample,
-        y    = .data$ymin,
+        y = .data$ymin,
         yend = .data$ymax
       ),
       linewidth = segment_linewidth
@@ -117,20 +125,24 @@ plot_ibaq_dynamic_range <- function(
     ) +
     ggplot2::theme_bw(base_size = 12) +
     ggplot2::theme(
-      axis.text.x      = ggplot2::element_text(angle = 45, hjust = 1),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       panel.grid.minor = ggplot2::element_blank(),
-      legend.position  = "none"
+      legend.position = "none"
     )
 
   if (isTRUE(show_n_proteins)) {
-    p <- p + ggplot2::geom_text(
-      data = summary_df,
-      mapping = ggplot2::aes(y = .data$ymax, label = paste0("n=", .data$n_quant)),
-      vjust = -0.5,
-      size = 3,
-      colour = "grey30",
-      show.legend = FALSE
-    )
+    p <- p +
+      ggplot2::geom_text(
+        data = summary_df,
+        mapping = ggplot2::aes(
+          y = .data$ymax,
+          label = paste0("n=", .data$n_quant)
+        ),
+        vjust = -0.5,
+        size = 3,
+        colour = "grey30",
+        show.legend = FALSE
+      )
   }
 
   if (!is.null(color_palette)) {

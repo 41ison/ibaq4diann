@@ -3,7 +3,7 @@ Title: iBAQ Calculation from DIA-NN Proteomics Reports
 Version: 0.1.0
 Authors@R: 
     person("Alison Felipe Alencar Chaves", role = c("aut", "cre"),
-           comment = c(ORCID = ""))
+           comment = c(ORCID = "0000-0001-6017-6671"))
 Description: Computes intensity-Based Absolute Quantification (iBAQ) values
     from DIA-NN search results (report.parquet files) and a reference proteome
     FASTA. Implements the iBAQ method of Schwanhausser et al. (2011)

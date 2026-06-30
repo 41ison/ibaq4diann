@@ -1,6 +1,3 @@
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 # ibaq4diann
 
 <!-- badges: start -->
@@ -102,15 +99,3 @@ compute_ibaq(
   output_long           = FALSE   # Wide (default) or long format
 )
 ```
-
-## Citation
-
-If you use **ibaq4diann**, please cite:
-
-> Schwanhäusser B, Busse D, Li N, et al. (2011). Global quantification
-> of mammalian gene expression control. *Nature* **473**:337–342.
-> <https://doi.org/10.1038/nature10098>
-
-## License
-
-MIT © 2026 Alison Felipe Alencar Chaves

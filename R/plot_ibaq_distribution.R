@@ -33,8 +33,8 @@
 #' # Box plot for selected samples
 #' plot_ibaq_distribution(
 #'   ibaq,
-#'   samples    = c("sample_A", "sample_B", "sample_C"),
-#'   plot_type  = "boxplot"
+#'   samples = c("sample_A", "sample_B", "sample_C"),
+#'   plot_type = "boxplot"
 #' )
 #'
 #' # Both violin + box
@@ -42,21 +42,29 @@
 #' ggplot2::ggsave("ibaq_distributions.pdf", p, width = 10, height = 6)
 #' }
 plot_ibaq_distribution <- function(
-    ibaq,
-    samples = NULL,
-    plot_type = c("violin", "boxplot", "both"),
-    log2_values = TRUE,
-    fill_alpha = 0.6,
-    color_palette = NULL) {
+  ibaq,
+  samples = NULL,
+  plot_type = c("violin", "boxplot", "both"),
+  log2_values = TRUE,
+  fill_alpha = 0.6,
+  color_palette = NULL
+) {
   plot_type <- match.arg(plot_type)
 
   # ---- Wide → long conversion ------------------------------------------------
-  meta_cols <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
+  meta_cols <- c(
+    "protein_id",
+    "Protein.Names",
+    "Genes",
+    "n_theoretical_peptides"
+  )
   meta_present <- intersect(meta_cols, names(ibaq))
 
   if (!"sample" %in% names(ibaq)) {
     sample_cols <- setdiff(names(ibaq), meta_present)
-    if (!is.null(samples)) sample_cols <- intersect(sample_cols, samples)
+    if (!is.null(samples)) {
+      sample_cols <- intersect(sample_cols, samples)
+    }
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
       cols = dplyr::all_of(sample_cols),
@@ -79,17 +87,17 @@ plot_ibaq_distribution <- function(
     ggplot2::aes(x = .data$sample, y = .data$iBAQ, fill = .data$sample)
   ) +
     ggplot2::labs(
-      title    = "iBAQ Value Distributions per Sample",
+      title = "iBAQ Value Distributions per Sample",
       subtitle = "Violin/box plots of protein abundance distributions",
-      x        = "Sample",
-      y        = y_label,
-      fill     = "Sample"
+      x = "Sample",
+      y = y_label,
+      fill = "Sample"
     ) +
     ggplot2::theme_bw(base_size = 12) +
     ggplot2::theme(
-      axis.text.x      = ggplot2::element_text(angle = 45, hjust = 1),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       panel.grid.minor = ggplot2::element_blank(),
-      legend.position  = "none"
+      legend.position = "none"
     )
 
   if (plot_type %in% c("violin", "both")) {
@@ -97,12 +105,13 @@ plot_ibaq_distribution <- function(
   }
   if (plot_type %in% c("boxplot", "both")) {
     box_width <- if (plot_type == "both") 0.15 else 0.5
-    p <- p + ggplot2::geom_boxplot(
-      alpha         = if (plot_type == "both") 0.9 else fill_alpha,
-      width         = box_width,
-      outlier.size  = 0.5,
-      outlier.alpha = 0.4
-    )
+    p <- p +
+      ggplot2::geom_boxplot(
+        alpha = if (plot_type == "both") 0.9 else fill_alpha,
+        width = box_width,
+        outlier.size = 0.5,
+        outlier.alpha = 0.4
+      )
   }
 
   if (!is.null(color_palette)) {

@@ -51,8 +51,8 @@ plot_ibaq_distribution(ibaq)
 # Box plot for selected samples
 plot_ibaq_distribution(
   ibaq,
-  samples    = c("sample_A", "sample_B", "sample_C"),
-  plot_type  = "boxplot"
+  samples = c("sample_A", "sample_B", "sample_C"),
+  plot_type = "boxplot"
 )
 
 # Both violin + box

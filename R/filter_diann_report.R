@@ -42,7 +42,7 @@
 #' filtered_relaxed <- filter_diann_report(
 #'   report,
 #'   lfq_quality_cutoff = NULL,
-#'   proteotypic_only   = FALSE
+#'   proteotypic_only = FALSE
 #' )
 #' }
 filter_diann_report <- function(

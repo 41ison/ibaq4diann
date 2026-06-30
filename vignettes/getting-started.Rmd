@@ -107,8 +107,8 @@ readr::write_tsv(ibaq, "iBAQ_results.tsv")
 # Or use the convenience pipeline wrapper
 run_ibaq_pipeline(
   parquet_path = parquet_path,
-  fasta_path   = fasta_path,
-  output_path  = "iBAQ_results.tsv"
+  fasta_path = fasta_path,
+  output_path = "iBAQ_results.tsv"
 )
 ```
 
