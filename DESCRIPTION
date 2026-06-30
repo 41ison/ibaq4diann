@@ -1,0 +1,37 @@
+Package: ibaq4diann
+Title: iBAQ Calculation from DIA-NN Proteomics Reports
+Version: 0.1.0
+Authors@R: 
+    person("Alison Felipe Alencar Chaves", role = c("aut", "cre"),
+           email = "alison.chaves@example.com",
+           comment = c(ORCID = ""))
+Description: Computes intensity-Based Absolute Quantification (iBAQ) values
+    from DIA-NN search results (report.parquet files) and a reference proteome
+    FASTA. Implements the iBAQ method of Schwanhausser et al. (2011)
+    <doi:10.1038/nature10098>, including in-silico tryptic digestion, quality
+    filtering of DIA-NN reports, and flexible output formats. Also provides
+    plotting utilities for visualising protein abundance ranks, distributions,
+    sample correlations, and dynamic range.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    arrow,
+    dplyr,
+    tidyr,
+    stringr,
+    ggplot2,
+    rlang,
+    Biostrings
+Suggests:
+    readr,
+    BiocManager,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/AlisonChaves/ibaq4diann
+BugReports: https://github.com/AlisonChaves/ibaq4diann/issues
+Additional_repositories: https://bioconductor.org/packages/release/bioc

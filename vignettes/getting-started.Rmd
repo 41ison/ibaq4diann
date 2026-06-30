@@ -1,0 +1,191 @@
+---
+title: "Getting Started with ibaq4diann"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with ibaq4diann}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+```
+
+## Introduction
+
+**ibaq4diann** computes intensity-Based Absolute Quantification (iBAQ) values
+from DIA-NN search results and a reference proteome FASTA. iBAQ normalises
+summed precursor intensities by the number of theoretically observable tryptic
+peptides, making protein abundances comparable across proteins of different
+sizes.
+
+$$iBAQ = \frac{\sum \text{precursor intensities}}{\text{# theoretical tryptic peptides}}$$
+
+This vignette demonstrates the full workflow using a minimal toy example
+(simulated data) to illustrate the API without requiring large input files.
+
+## Installation
+
+```{r install, eval = FALSE}
+# Bioconductor dependency (if not already installed)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("Biostrings")
+
+# Install ibaq4diann from GitHub
+remotes::install_github("AlisonChaves/ibaq4diann")
+```
+
+```{r setup}
+library(ibaq4diann)
+```
+
+## Step 1: Prepare inputs
+
+`compute_ibaq()` requires two inputs:
+
+1. A **DIA-NN `report.parquet`** file — the main output of a DIA-NN
+   database search.
+2. A **reference proteome FASTA** — the same database used during the search
+   (e.g. a UniProt proteome download).
+
+```{r inputs, eval = FALSE}
+parquet_path <- "report.parquet"
+fasta_path   <- "UP000005640_9606.fasta"  # Human UniProt proteome
+```
+
+## Step 2: Compute iBAQ values
+
+```{r compute, eval = FALSE}
+ibaq <- compute_ibaq(
+  parquet_path = parquet_path,
+  fasta_path   = fasta_path
+)
+
+# Wide format: proteins × samples
+head(ibaq)
+dim(ibaq)
+```
+
+The returned tibble has:
+
+- `protein_id` — protein group identifier (from DIA-NN `Protein.Group`)
+- `Protein.Names` — full protein name (if present in the report)
+- `Genes` — gene name(s) (if present)
+- `n_theoretical_peptides` — in-silico tryptic peptide count (iBAQ denominator)
+- One column per DIA-NN run containing the iBAQ value (log2-transformed by
+  default)
+
+## Step 3: Customise parameters
+
+```{r custom, eval = FALSE}
+# Raw (non-log2) iBAQ, long-format output, allow 1 missed cleavage
+ibaq_custom <- compute_ibaq(
+  parquet_path         = parquet_path,
+  fasta_path           = fasta_path,
+  intensity_col        = "Precursor.Quantity",  # raw intensities
+  q_value_cutoff       = 0.01,
+  lfq_quality_cutoff   = NULL,                  # skip LFQ quality filter
+  max_missed_cleavages = 1,
+  log2_transform       = FALSE,
+  output_long          = TRUE                   # tidy long format
+)
+
+head(ibaq_custom)
+```
+
+## Step 4: Save results
+
+```{r save, eval = FALSE}
+# Write to TSV
+readr::write_tsv(ibaq, "iBAQ_results.tsv")
+
+# Or use the convenience pipeline wrapper
+run_ibaq_pipeline(
+  parquet_path = parquet_path,
+  fasta_path   = fasta_path,
+  output_path  = "iBAQ_results.tsv"
+)
+```
+
+## Step 5: Visualise results
+
+`ibaq4diann` provides four ready-made plotting functions, all returning
+`ggplot2` objects that can be further customised.
+
+### Ranked protein abundances
+
+```{r rank_plot, eval = FALSE}
+p_rank <- plot_ibaq_rank(
+  ibaq,
+  top_n_labels = 10,       # label top 10 proteins per sample
+  label_col    = "Genes"   # use gene names as labels
+)
+print(p_rank)
+ggplot2::ggsave("ibaq_rank.pdf", p_rank, width = 12, height = 5)
+```
+
+Each facet shows one sample. The x-axis is the protein rank (rank 1 = most
+abundant); the y-axis shows log₂(iBAQ + 1).
+
+### iBAQ value distributions
+
+```{r dist_plot, eval = FALSE}
+p_dist <- plot_ibaq_distribution(
+  ibaq,
+  plot_type = "both"   # violin + box plot overlay
+)
+print(p_dist)
+```
+
+Useful for QC: samples with similar distribution shapes and medians indicate
+good between-sample reproducibility.
+
+### Sample correlation heatmap
+
+```{r cor_plot, eval = FALSE}
+p_cor <- plot_ibaq_correlation(
+  ibaq,
+  method = "pearson"
+)
+print(p_cor)
+```
+
+High pairwise correlations (> 0.95) between replicates confirm experimental
+reproducibility.
+
+### Dynamic range
+
+```{r dr_plot, eval = FALSE}
+p_dr <- plot_ibaq_dynamic_range(ibaq)
+print(p_dr)
+```
+
+Each vertical segment represents the full iBAQ value range of a sample; the
+diamond marks the median. The number of quantified proteins (`n=`) is annotated
+at the top of each bar.
+
+## Key parameters reference
+
+| Parameter | Default | Description |
+|---|---|---|
+| `intensity_col` | `"Precursor.Normalised"` | Intensity column to use |
+| `q_value_cutoff` | `0.01` | Precursor FDR threshold |
+| `pg_q_value_cutoff` | `0.01` | Protein group FDR threshold |
+| `proteotypic_only` | `TRUE` | Keep only unique peptides |
+| `lfq_quality_cutoff` | `0.50` | Minimum LFQ quality score |
+| `min_peptide_len` | `6` | Minimum tryptic peptide length |
+| `max_peptide_len` | `30` | Maximum tryptic peptide length |
+| `max_missed_cleavages` | `0` | Missed cleavages in silico |
+| `log2_transform` | `TRUE` | Apply log₂(x + 1) transform |
+| `output_long` | `FALSE` | Return long vs. wide format |
+
+## References
+
+- Schwanhäusser B et al. (2011). Global quantification of mammalian gene
+  expression control. *Nature* **473**:337–342.
+  [doi:10.1038/nature10098](https://doi.org/10.1038/nature10098)
+- DIA-NN: [github.com/vdemichev/DiaNN](https://github.com/vdemichev/DiaNN)

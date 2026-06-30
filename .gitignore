@@ -1,0 +1,32 @@
+# R standard ignores
+.Rproj.user
+.Rhistory
+.RData
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
+
+# Large data files (not distributed with package)
+report.parquet
+UP000031575.fasta
+iBAQ_results.tsv
+iBAQ_results.zsv
+*.parquet
+*.fasta
+
+# devtools / roxygen artefacts
+/doc/
+/Meta/
+NAMESPACE
+src/*.o
+src/*.so
+src/*.dll
+
+# R CMD BUILD / CHECK artefacts
+*.tar.gz
+*.Rcheck/
+
+# Compiled vignettes (re-generated at build time)
+vignettes/*.html
+vignettes/*.pdf
