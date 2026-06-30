@@ -1,61 +1,50 @@
----
-output: github_document
----
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.path  = "man/figures/README-",
-  out.width = "100%"
-)
-```
 
 # ibaq4diann
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/41ison/ibaq4diann/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/41ison/ibaq4diann/actions/workflows/R-CMD-check.yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-**ibaq4diann** computes **intensity-Based Absolute Quantification (iBAQ)**
-values from [DIA-NN](https://github.com/vdemichev/DiaNN) search results
-(`report.parquet`) and a reference proteome FASTA. It implements the iBAQ
-method of [Schwanhäusser *et al.* (2011)](https://doi.org/10.1038/nature10098)
-and provides plotting utilities for exploratory data analysis.
+**ibaq4diann** computes **intensity-Based Absolute Quantification
+(iBAQ)** values from [DIA-NN](https://github.com/vdemichev/DiaNN) search
+results (`report.parquet`) and a reference proteome FASTA. It implements
+the iBAQ method of [Schwanhäusser *et al.*
+(2011)](https://doi.org/10.1038/nature10098) and provides plotting
+utilities for exploratory data analysis.
 
 ## Overview
 
-```
-iBAQ = Σ(precursor intensities per protein) / (# theoretical tryptic peptides)
-```
+    iBAQ = Σ(precursor intensities per protein) / (# theoretical tryptic peptides)
 
 The package provides:
 
-| Function | Description |
-|---|---|
-| `compute_ibaq()` | **Main function** — compute iBAQ values from DIA-NN output |
-| `run_ibaq_pipeline()` | Convenience wrapper that also writes results to TSV |
-| `filter_diann_report()` | Quality-control filtering of DIA-NN report tibbles |
-| `plot_ibaq_rank()` | Ranked protein abundance plot per sample |
-| `plot_ibaq_distribution()` | Violin/box plot of iBAQ distributions |
-| `plot_ibaq_correlation()` | Sample-to-sample correlation heatmap |
-| `plot_ibaq_dynamic_range()` | Dynamic range visualisation per sample |
+| Function                    | Description                                                |
+|-----------------------------|------------------------------------------------------------|
+| `compute_ibaq()`            | **Main function** — compute iBAQ values from DIA-NN output |
+| `run_ibaq_pipeline()`       | Convenience wrapper that also writes results to TSV        |
+| `filter_diann_report()`     | Quality-control filtering of DIA-NN report tibbles         |
+| `plot_ibaq_rank()`          | Ranked protein abundance plot per sample                   |
+| `plot_ibaq_distribution()`  | Violin/box plot of iBAQ distributions                      |
+| `plot_ibaq_correlation()`   | Sample-to-sample correlation heatmap                       |
+| `plot_ibaq_dynamic_range()` | Dynamic range visualisation per sample                     |
 
 ## Installation
 
-```{r install, eval = FALSE}
+``` r
 # Install from GitHub (requires remotes)
 # install.packages("remotes")
 remotes::install_github("41ison/ibaq4diann")
 ```
 
-> **Note**: `ibaq4diann` depends on `Biostrings` from Bioconductor. If it is
-> not already installed, run:
+> **Note**: `ibaq4diann` depends on `Biostrings` from Bioconductor. If
+> it is not already installed, run:
 >
-> ```r
+> ``` r
 > if (!requireNamespace("BiocManager", quietly = TRUE))
 >   install.packages("BiocManager")
 > BiocManager::install("Biostrings")
@@ -63,7 +52,7 @@ remotes::install_github("41ison/ibaq4diann")
 
 ## Quick start
 
-```{r quickstart, eval = FALSE}
+``` r
 library(ibaq4diann)
 
 # Compute iBAQ values (wide format, log2-transformed by default)
@@ -80,7 +69,7 @@ readr::write_tsv(ibaq, "iBAQ_results.tsv")
 
 ## Visualisation
 
-```{r plots, eval = FALSE}
+``` r
 # Ranked protein abundance per sample
 plot_ibaq_rank(ibaq, top_n_labels = 10)
 
@@ -96,7 +85,7 @@ plot_ibaq_dynamic_range(ibaq)
 
 ## Parameters at a glance
 
-```{r params, eval = FALSE}
+``` r
 compute_ibaq(
   parquet_path          = "report.parquet",       # DIA-NN output
   fasta_path            = "proteome.fasta",        # Reference proteome
@@ -118,8 +107,8 @@ compute_ibaq(
 
 If you use **ibaq4diann**, please cite:
 
-> Schwanhäusser B, Busse D, Li N, et al. (2011). Global quantification of
-> mammalian gene expression control. *Nature* **473**:337–342.
+> Schwanhäusser B, Busse D, Li N, et al. (2011). Global quantification
+> of mammalian gene expression control. *Nature* **473**:337–342.
 > <https://doi.org/10.1038/nature10098>
 
 ## License
