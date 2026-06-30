@@ -42,17 +42,16 @@
 #' ggplot2::ggsave("ibaq_distributions.pdf", p, width = 10, height = 6)
 #' }
 plot_ibaq_distribution <- function(
-  ibaq,
-  samples       = NULL,
-  plot_type     = c("violin", "boxplot", "both"),
-  log2_values   = TRUE,
-  fill_alpha    = 0.6,
-  color_palette = NULL
-) {
+    ibaq,
+    samples = NULL,
+    plot_type = c("violin", "boxplot", "both"),
+    log2_values = TRUE,
+    fill_alpha = 0.6,
+    color_palette = NULL) {
   plot_type <- match.arg(plot_type)
 
   # ---- Wide → long conversion ------------------------------------------------
-  meta_cols    <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
+  meta_cols <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
   meta_present <- intersect(meta_cols, names(ibaq))
 
   if (!"sample" %in% names(ibaq)) {
@@ -60,8 +59,8 @@ plot_ibaq_distribution <- function(
     if (!is.null(samples)) sample_cols <- intersect(sample_cols, samples)
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
-      cols      = dplyr::all_of(sample_cols),
-      names_to  = "sample",
+      cols = dplyr::all_of(sample_cols),
+      names_to = "sample",
       values_to = "iBAQ"
     )
   } else {

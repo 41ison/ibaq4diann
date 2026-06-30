@@ -31,8 +31,9 @@ This vignette demonstrates the full workflow using a minimal toy example
 
 ```{r install, eval = FALSE}
 # Bioconductor dependency (if not already installed)
-if (!requireNamespace("BiocManager", quietly = TRUE))
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
+}
 BiocManager::install("Biostrings")
 
 # Install ibaq4diann from GitHub
@@ -54,7 +55,7 @@ library(ibaq4diann)
 
 ```{r inputs, eval = FALSE}
 parquet_path <- "report.parquet"
-fasta_path   <- "UP000005640_9606.fasta"  # Human UniProt proteome
+fasta_path <- "UP000005640_9606.fasta" # Human UniProt proteome
 ```
 
 ## Step 2: Compute iBAQ values
@@ -62,7 +63,7 @@ fasta_path   <- "UP000005640_9606.fasta"  # Human UniProt proteome
 ```{r compute, eval = FALSE}
 ibaq <- compute_ibaq(
   parquet_path = parquet_path,
-  fasta_path   = fasta_path
+  fasta_path = fasta_path
 )
 
 # Wide format: proteins × samples
@@ -84,14 +85,14 @@ The returned tibble has:
 ```{r custom, eval = FALSE}
 # Raw (non-log2) iBAQ, long-format output, allow 1 missed cleavage
 ibaq_custom <- compute_ibaq(
-  parquet_path         = parquet_path,
-  fasta_path           = fasta_path,
-  intensity_col        = "Precursor.Quantity",  # raw intensities
-  q_value_cutoff       = 0.01,
-  lfq_quality_cutoff   = NULL,                  # skip LFQ quality filter
+  parquet_path = parquet_path,
+  fasta_path = fasta_path,
+  intensity_col = "Precursor.Quantity", # raw intensities
+  q_value_cutoff = 0.01,
+  lfq_quality_cutoff = NULL, # skip LFQ quality filter
   max_missed_cleavages = 1,
-  log2_transform       = FALSE,
-  output_long          = TRUE                   # tidy long format
+  log2_transform = FALSE,
+  output_long = TRUE # tidy long format
 )
 
 head(ibaq_custom)
@@ -121,8 +122,8 @@ run_ibaq_pipeline(
 ```{r rank_plot, eval = FALSE}
 p_rank <- plot_ibaq_rank(
   ibaq,
-  top_n_labels = 10,       # label top 10 proteins per sample
-  label_col    = "Genes"   # use gene names as labels
+  top_n_labels = 10, # label top 10 proteins per sample
+  label_col    = "Genes" # use gene names as labels
 )
 print(p_rank)
 ggplot2::ggsave("ibaq_rank.pdf", p_rank, width = 12, height = 5)
@@ -136,7 +137,7 @@ abundant); the y-axis shows log₂(iBAQ + 1).
 ```{r dist_plot, eval = FALSE}
 p_dist <- plot_ibaq_distribution(
   ibaq,
-  plot_type = "both"   # violin + box plot overlay
+  plot_type = "both" # violin + box plot overlay
 )
 print(p_dist)
 ```

@@ -15,10 +15,9 @@ iBAQ_results.zsv
 *.parquet
 *.fasta
 
-# devtools / roxygen artefacts
+# devtools / roxygen artefacts (auto-generated, keep NAMESPACE tracked)
 /doc/
 /Meta/
-NAMESPACE
 src/*.o
 src/*.so
 src/*.dll

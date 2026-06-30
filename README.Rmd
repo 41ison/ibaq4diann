@@ -6,9 +6,9 @@ output: github_document
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.path  = "man/figures/README-",
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
   out.width = "100%"
 )
 ```
@@ -97,19 +97,19 @@ plot_ibaq_dynamic_range(ibaq)
 
 ```r
 compute_ibaq(
-  parquet_path          = "report.parquet",  # DIA-NN output
-  fasta_path            = "proteome.fasta",  # Reference proteome
-  intensity_col         = "Precursor.Normalised",  # or "Precursor.Quantity"
-  q_value_cutoff        = 0.01,   # Precursor FDR
-  pg_q_value_cutoff     = 0.01,   # Protein group FDR
+  parquet_path = "report.parquet",  # DIA-NN output
+  fasta_path = "proteome.fasta",  # Reference proteome
+  intensity_col = "Precursor.Normalised",  # or "Precursor.Quantity"
+  q_value_cutoff = 0.01,   # Precursor FDR
+  pg_q_value_cutoff = 0.01,   # Protein group FDR
   lib_pg_q_value_cutoff = 0.01,   # Library PG FDR
-  proteotypic_only      = TRUE,   # Unique peptides only
-  lfq_quality_cutoff    = 0.50,   # LFQ quality threshold
-  min_peptide_len       = 6,      # In-silico digest: min peptide length
-  max_peptide_len       = 30,     # In-silico digest: max peptide length
-  max_missed_cleavages  = 0,      # Missed cleavages allowed
-  log2_transform        = TRUE,   # Apply log2(iBAQ + 1)
-  output_long           = FALSE   # Wide (default) or long format
+  proteotypic_only = TRUE,   # Unique peptides only
+  lfq_quality_cutoff = 0.50,   # LFQ quality threshold
+  min_peptide_len = 6,      # In-silico digest: min peptide length
+  max_peptide_len = 30,     # In-silico digest: max peptide length
+  max_missed_cleavages = 0,      # Missed cleavages allowed
+  log2_transform = TRUE,   # Apply log2(iBAQ + 1)
+  output_long = FALSE   # Wide (default) or long format
 )
 ```
 

@@ -45,16 +45,15 @@
 #' ggplot2::ggsave("dynamic_range.pdf", p, width = 8, height = 6)
 #' }
 plot_ibaq_dynamic_range <- function(
-  ibaq,
-  samples            = NULL,
-  log2_values        = TRUE,
-  show_n_proteins    = TRUE,
-  point_size         = 3,
-  segment_linewidth  = 1.2,
-  color_palette      = NULL
-) {
+    ibaq,
+    samples = NULL,
+    log2_values = TRUE,
+    show_n_proteins = TRUE,
+    point_size = 3,
+    segment_linewidth = 1.2,
+    color_palette = NULL) {
   # ---- Wide → long conversion ------------------------------------------------
-  meta_cols    <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
+  meta_cols <- c("protein_id", "Protein.Names", "Genes", "n_theoretical_peptides")
   meta_present <- intersect(meta_cols, names(ibaq))
 
   if (!"sample" %in% names(ibaq)) {
@@ -62,8 +61,8 @@ plot_ibaq_dynamic_range <- function(
     if (!is.null(samples)) sample_cols <- intersect(sample_cols, samples)
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
-      cols      = dplyr::all_of(sample_cols),
-      names_to  = "sample",
+      cols = dplyr::all_of(sample_cols),
+      names_to = "sample",
       values_to = "iBAQ"
     )
   } else {
@@ -79,14 +78,14 @@ plot_ibaq_dynamic_range <- function(
   summary_df <- ibaq_long |>
     dplyr::group_by(.data$sample) |>
     dplyr::summarise(
-      ymin     = min(.data$iBAQ,    na.rm = TRUE),
-      ymax     = max(.data$iBAQ,    na.rm = TRUE),
-      ymedian  = stats::median(.data$iBAQ, na.rm = TRUE),
-      n_quant  = dplyr::n(),
-      .groups  = "drop"
+      ymin = min(.data$iBAQ, na.rm = TRUE),
+      ymax = max(.data$iBAQ, na.rm = TRUE),
+      ymedian = stats::median(.data$iBAQ, na.rm = TRUE),
+      n_quant = dplyr::n(),
+      .groups = "drop"
     )
 
-  y_label  <- if (isTRUE(log2_values)) "log\u2082(iBAQ + 1)" else "iBAQ"
+  y_label <- if (isTRUE(log2_values)) "log\u2082(iBAQ + 1)" else "iBAQ"
   y_label_range <- paste0(y_label, " range")
 
   p <- ggplot2::ggplot(
@@ -103,17 +102,17 @@ plot_ibaq_dynamic_range <- function(
     ) +
     ggplot2::geom_point(
       ggplot2::aes(y = .data$ymedian),
-      size  = point_size,
+      size = point_size,
       shape = 18
     ) +
     ggplot2::labs(
-      title    = "Dynamic Range of iBAQ Quantification",
+      title = "Dynamic Range of iBAQ Quantification",
       subtitle = paste0(
         "Vertical segments show min\u2013max range; diamond = median. ",
         y_label
       ),
-      x      = "Sample",
-      y      = y_label_range,
+      x = "Sample",
+      y = y_label_range,
       colour = "Sample"
     ) +
     ggplot2::theme_bw(base_size = 12) +
@@ -125,11 +124,11 @@ plot_ibaq_dynamic_range <- function(
 
   if (isTRUE(show_n_proteins)) {
     p <- p + ggplot2::geom_text(
-      data    = summary_df,
+      data = summary_df,
       mapping = ggplot2::aes(y = .data$ymax, label = paste0("n=", .data$n_quant)),
-      vjust   = -0.5,
-      size    = 3,
-      colour  = "grey30",
+      vjust = -0.5,
+      size = 3,
+      colour = "grey30",
       show.legend = FALSE
     )
   }
