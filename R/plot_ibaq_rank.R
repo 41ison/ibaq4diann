@@ -70,13 +70,13 @@ plot_ibaq_rank <- function(
     "Genes",
     "n_theoretical_peptides"
   )
-  meta_present <- intersect(meta_cols, names(ibaq))
+  meta_present <- dplyr::intersect(meta_cols, names(ibaq))
 
   # ---- Convert wide → long if needed ----------------------------------------
   if (!"sample" %in% names(ibaq)) {
-    sample_cols <- setdiff(names(ibaq), meta_present)
+    sample_cols <- dplyr::setdiff(names(ibaq), meta_present)
     if (!is.null(samples)) {
-      sample_cols <- intersect(sample_cols, samples)
+      sample_cols <- dplyr::intersect(sample_cols, samples)
     }
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
@@ -126,7 +126,7 @@ plot_ibaq_rank <- function(
     ggplot2::geom_point(size = point_size, alpha = point_alpha) +
     ggplot2::facet_wrap(~sample, scales = "free_x") +
     ggplot2::labs(
-      title = "Ranked Protein Abundances",
+      title = "Dynamic Range of Protein Abundance",
       subtitle = "Proteins ranked from most to least abundant (iBAQ)",
       x = "Protein rank",
       y = y_label,
@@ -135,8 +135,8 @@ plot_ibaq_rank <- function(
     ggplot2::theme_bw(base_size = 12) +
     ggplot2::theme(
       strip.background = ggplot2::element_blank(),
-      strip.text = ggplot2::element_text(colour = "white", face = "bold"),
-      panel.grid.minor = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(colour = "black", face = "bold"),
+      panel.grid = ggplot2::element_blank(),
       legend.position = "none"
     )
 
@@ -146,12 +146,17 @@ plot_ibaq_rank <- function(
 
   if (top_n_labels > 0 && nrow(label_data) > 0) {
     p <- p +
-      ggplot2::geom_text(
+      ggrepel::geom_text_repel(
         data = label_data,
         mapping = ggplot2::aes(label = .data[[label_col]]),
         size = 2.5,
-        hjust = -0.15,
         colour = "grey20",
+        max.overlaps = Inf,
+        box.padding = 0.3,
+        point.padding = 0.2,
+        min.segment.length = 0,
+        segment.colour = "grey60",
+        segment.size = 0.2,
         show.legend = FALSE
       )
   }
