@@ -60,12 +60,12 @@ plot_ibaq_dynamic_range <- function(
     "Genes",
     "n_theoretical_peptides"
   )
-  meta_present <- intersect(meta_cols, names(ibaq))
+  meta_present <- dplyr::intersect(meta_cols, names(ibaq))
 
   if (!"sample" %in% names(ibaq)) {
-    sample_cols <- setdiff(names(ibaq), meta_present)
+    sample_cols <- dplyr::setdiff(names(ibaq), meta_present)
     if (!is.null(samples)) {
-      sample_cols <- intersect(sample_cols, samples)
+      sample_cols <- dplyr::intersect(sample_cols, samples)
     }
     ibaq_long <- tidyr::pivot_longer(
       ibaq,
