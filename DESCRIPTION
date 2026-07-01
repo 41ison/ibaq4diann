@@ -15,7 +15,7 @@ Description: Computes intensity-Based Absolute Quantification (iBAQ) values
     filtering of DIA-NN reports, and flexible output formats. Also provides
     plotting utilities for visualising protein abundance ranks, distributions,
     sample correlations, and dynamic range.
-License: MIT + file LICENSE
+License: MIT
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
