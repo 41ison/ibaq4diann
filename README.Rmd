@@ -6,9 +6,9 @@ output: github_document
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.path  = "man/figures/README-",
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
   out.width = "100%"
 )
 ```
@@ -43,6 +43,8 @@ The package provides:
 | `plot_ibaq_distribution()` | Violin/box plot of iBAQ distributions |
 | `plot_ibaq_correlation()` | Sample-to-sample correlation heatmap |
 | `plot_ibaq_dynamic_range()` | Dynamic range visualisation per sample |
+| `plot_ibaq_pca()` | Principal component analysis using KNN for clustering |
+| `plot_ibaq_pie()` | Pie chart for proportion of abundance from each protein (I can hear your thoughts! this is a bad plot) |
 
 ## Installation
 
@@ -92,6 +94,12 @@ plot_ibaq_correlation(ibaq)
 
 # Dynamic range per sample
 plot_ibaq_dynamic_range(ibaq)
+
+# Principal component analysis (KNN clustering)
+plot_ibaq_pca(ibaq)
+
+# Pie chart of protein abundance proportions
+plot_ibaq_pie(ibaq, top_n = 10)
 ```
 
 ## Parameters at a glance
