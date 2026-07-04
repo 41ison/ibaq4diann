@@ -1,8 +1,6 @@
 # ibaq4diann
 
 <!-- badges: start -->
-
-[![R-CMD-check](https://github.com/41ison/ibaq4diann/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/41ison/ibaq4diann/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/1285321934.svg)](https://doi.org/10.5281/zenodo.21195029)
