@@ -110,3 +110,5 @@ compute_ibaq(
   output_long = FALSE                      # Wide (default) or long format
 )
 ```
+
+<a href="https://doi.org/10.5281/zenodo.21195029"><img src="https://zenodo.org/badge/1285321934.svg" alt="DOI"></a>
