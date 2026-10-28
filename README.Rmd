@@ -108,6 +108,7 @@ plot_ibaq_pie(ibaq, top_n = 10)
 compute_ibaq(
   parquet_path = "report.parquet", # DIA-NN output
   fasta_path = "proteome.fasta", # Reference proteome
+  id_col = "Protein.Group", # or "Protein.Ids", "Protein.Names", "Genes"
   intensity_col = "Precursor.Normalised", # or "Precursor.Quantity"
   q_value_cutoff = 0.01, # Precursor FDR
   pg_q_value_cutoff = 0.01, # Protein group FDR
