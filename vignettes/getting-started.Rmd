@@ -73,12 +73,40 @@ dim(ibaq)
 
 The returned tibble has:
 
-- `protein_id` — protein group identifier (from DIA-NN `Protein.Group`)
-- `Protein.Names` — full protein name (if present in the report)
-- `Genes` — gene name(s) (if present)
+- `protein_id` — protein identifier (from DIA-NN `Protein.Group` by default;
+  see below)
+- `Protein.Names`, `Genes` — the other identifier columns present in the
+  report
 - `n_theoretical_peptides` — in-silico tryptic peptide count (iBAQ denominator)
 - One column per DIA-NN run containing the iBAQ value (log2-transformed by
   default)
+
+### Choosing the protein identifier
+
+DIA-NN reports describe each protein group with four identifier columns.
+The `id_col` argument selects which one defines a "protein" in the output,
+and the FASTA is matched accordingly:
+
+| `id_col` | Example | Matched to FASTA |
+|---|---|---|
+| `"Protein.Group"` (default) | `P04040` | accession |
+| `"Protein.Ids"` | `P0DP23;P0DP24;P0DP25` | accession (leading member found) |
+| `"Protein.Names"` | `CATA_HUMAN` | entry name (`sp\|P04040\|CATA_HUMAN`) |
+| `"Genes"` | `CAT` | `GN=` field of the header |
+
+Because these columns differ in granularity, **the number of proteins in the
+output depends on `id_col`**: `Protein.Ids` is the most granular, while
+`Genes` merges distinct protein groups from the same gene (their intensities
+are summed) and drops rows with an empty gene symbol. `compute_ibaq()`
+reports these counts in its messages.
+
+```{r id_col, eval = FALSE}
+ibaq_genes <- compute_ibaq(
+  parquet_path = parquet_path,
+  fasta_path = fasta_path,
+  id_col = "Genes"
+)
+```
 
 ## Step 3: Customise parameters
 
@@ -173,6 +201,7 @@ at the top of each bar.
 
 | Parameter | Default | Description |
 |---|---|---|
+| `id_col` | `"Protein.Group"` | Identifier column defining a protein |
 | `intensity_col` | `"Precursor.Normalised"` | Intensity column to use |
 | `q_value_cutoff` | `0.01` | Precursor FDR threshold |
 | `pg_q_value_cutoff` | `0.01` | Protein group FDR threshold |
