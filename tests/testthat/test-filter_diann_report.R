@@ -15,14 +15,23 @@ make_mock_report <- function() {
 
 test_that("filter_diann_report removes rows above Q.Value cutoff", {
   report <- make_mock_report()
-  out <- filter_diann_report(report, q_value_cutoff = 0.01)
+  # Disable the proteotypic filter so only the Q.Value cutoff applies
+  out <- filter_diann_report(
+    report,
+    q_value_cutoff = 0.01,
+    proteotypic_only = FALSE
+  )
   expect_true(all(out$Q.Value <= 0.01))
   expect_equal(nrow(out), 3L)
 })
 
 test_that("filter_diann_report removes non-proteotypic rows", {
   report <- make_mock_report()
-  out <- filter_diann_report(report, q_value_cutoff = NULL, proteotypic_only = TRUE)
+  out <- filter_diann_report(
+    report,
+    q_value_cutoff = NULL,
+    proteotypic_only = TRUE
+  )
   expect_true(all(out$Proteotypic == 1))
   expect_equal(nrow(out), 3L)
 })

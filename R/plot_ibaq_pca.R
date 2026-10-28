@@ -59,43 +59,25 @@ plot_ibaq_pca <- function(
   scale = TRUE,
   color_palette = NULL
 ) {
-  rlang::check_installed("FNN", reason = "to build the KNN graph for clustering.")
-  rlang::check_installed("igraph", reason = "to perform Louvain community detection.")
+  rlang::check_installed(
+    "FNN",
+    reason = "to build the KNN graph for clustering."
+  )
+  rlang::check_installed(
+    "igraph",
+    reason = "to perform Louvain community detection."
+  )
 
   # ---- Validate components ---------------------------------------------------
   stopifnot(
-    "components must be an integer vector of length 2" =
-      length(components) == 2 && all(components == as.integer(components)),
+    "components must be an integer vector of length 2" = length(components) ==
+      2 &&
+      all(components == as.integer(components)),
     "components must be positive" = all(components > 0)
   )
 
-  # ---- Determine metadata columns -------------------------------------------
-  meta_cols <- c(
-    "protein_id",
-    "Protein.Names",
-    "Genes",
-    "n_theoretical_peptides"
-  )
-  meta_present <- dplyr::intersect(meta_cols, names(ibaq))
-
   # ---- Convert wide -> long if needed ----------------------------------------
-  if (!"sample" %in% names(ibaq)) {
-    sample_cols <- dplyr::setdiff(names(ibaq), meta_present)
-    if (!is.null(samples)) {
-      sample_cols <- dplyr::intersect(sample_cols, samples)
-    }
-    ibaq_long <- tidyr::pivot_longer(
-      ibaq,
-      cols = dplyr::all_of(sample_cols),
-      names_to = "sample",
-      values_to = "iBAQ"
-    )
-  } else {
-    ibaq_long <- ibaq
-    if (!is.null(samples)) {
-      ibaq_long <- dplyr::filter(ibaq_long, .data$sample %in% samples)
-    }
-  }
+  ibaq_long <- ibaq_to_long(ibaq, samples)
 
   # ---- Build samples x proteins matrix ---------------------------------------
   ibaq_wide <- ibaq_long |>
@@ -116,7 +98,8 @@ plot_ibaq_pca <- function(
   if (n_samples < 3) {
     stop(
       "PCA requires at least 3 samples but only ",
-      n_samples, " were found."
+      n_samples,
+      " were found."
     )
   }
 
@@ -134,8 +117,10 @@ plot_ibaq_pca <- function(
   max_pc <- max(components)
   if (max_pc > ncol(pca_res$x)) {
     stop(
-      "Requested PC", max_pc,
-      " but only ", ncol(pca_res$x),
+      "Requested PC",
+      max_pc,
+      " but only ",
+      ncol(pca_res$x),
       " components are available."
     )
   }
@@ -177,12 +162,18 @@ plot_ibaq_pca <- function(
 
   # ---- Axis labels -----------------------------------------------------------
   x_lab <- paste0(
-    "PC", pc_x, " (",
-    round(var_explained[pc_x] * 100, 1), "% variance)"
+    "PC",
+    pc_x,
+    " (",
+    round(var_explained[pc_x] * 100, 1),
+    "% variance)"
   )
   y_lab <- paste0(
-    "PC", pc_y, " (",
-    round(var_explained[pc_y] * 100, 1), "% variance)"
+    "PC",
+    pc_y,
+    " (",
+    round(var_explained[pc_y] * 100, 1),
+    "% variance)"
   )
 
   transform_note <- if (isTRUE(log2_values)) {
@@ -204,8 +195,10 @@ plot_ibaq_pca <- function(
     ggplot2::labs(
       title = "PCA of iBAQ Protein Abundances",
       subtitle = paste0(
-        "Louvain clustering on KNN graph (k=", effective_k,
-        ") | ", transform_note
+        "Louvain clustering on KNN graph (k=",
+        effective_k,
+        ") | ",
+        transform_note
       ),
       x = x_lab,
       y = y_lab,

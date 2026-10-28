@@ -63,33 +63,8 @@ plot_ibaq_rank <- function(
   point_alpha = 0.6,
   color_palette = NULL
 ) {
-  # ---- Determine metadata columns -------------------------------------------
-  meta_cols <- c(
-    "protein_id",
-    "Protein.Names",
-    "Genes",
-    "n_theoretical_peptides"
-  )
-  meta_present <- dplyr::intersect(meta_cols, names(ibaq))
-
   # ---- Convert wide → long if needed ----------------------------------------
-  if (!"sample" %in% names(ibaq)) {
-    sample_cols <- dplyr::setdiff(names(ibaq), meta_present)
-    if (!is.null(samples)) {
-      sample_cols <- dplyr::intersect(sample_cols, samples)
-    }
-    ibaq_long <- tidyr::pivot_longer(
-      ibaq,
-      cols = dplyr::all_of(sample_cols),
-      names_to = "sample",
-      values_to = "iBAQ"
-    )
-  } else {
-    ibaq_long <- ibaq
-    if (!is.null(samples)) {
-      ibaq_long <- dplyr::filter(ibaq_long, .data$sample %in% samples)
-    }
-  }
+  ibaq_long <- ibaq_to_long(ibaq, samples)
 
   # ---- Resolve label column --------------------------------------------------
   if (!label_col %in% names(ibaq_long)) {
@@ -146,14 +121,28 @@ plot_ibaq_rank <- function(
 
   if (top_n_labels > 0 && nrow(label_data) > 0) {
     rlang::check_installed("ggrepel", reason = "to label top-ranked proteins.")
+
+    # Top-ranked points stack almost vertically at rank ~ 1, so labels are
+    # pushed into a column to the right of the curve (15 % of each panel's
+    # x-range) and only repelled vertically.
+    max_rank <- ibaq_long |>
+      dplyr::group_by(.data$sample) |>
+      dplyr::summarise(max_rank = max(.data$rank), .groups = "drop")
+    label_data <- label_data |>
+      dplyr::left_join(max_rank, by = "sample") |>
+      dplyr::mutate(nudge_x = 0.15 * .data$max_rank)
+
     p <- p +
       ggrepel::geom_text_repel(
         data = label_data,
         mapping = ggplot2::aes(label = .data[[label_col]]),
+        nudge_x = label_data$nudge_x,
+        direction = "y",
+        hjust = 0,
         size = 2.5,
         colour = "grey20",
         max.overlaps = Inf,
-        box.padding = 0.3,
+        box.padding = 0.15,
         point.padding = 0.2,
         min.segment.length = 0,
         segment.colour = "grey60",

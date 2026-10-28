@@ -54,31 +54,7 @@ plot_ibaq_dynamic_range <- function(
   color_palette = NULL
 ) {
   # ---- Wide → long conversion ------------------------------------------------
-  meta_cols <- c(
-    "protein_id",
-    "Protein.Names",
-    "Genes",
-    "n_theoretical_peptides"
-  )
-  meta_present <- dplyr::intersect(meta_cols, names(ibaq))
-
-  if (!"sample" %in% names(ibaq)) {
-    sample_cols <- dplyr::setdiff(names(ibaq), meta_present)
-    if (!is.null(samples)) {
-      sample_cols <- dplyr::intersect(sample_cols, samples)
-    }
-    ibaq_long <- tidyr::pivot_longer(
-      ibaq,
-      cols = dplyr::all_of(sample_cols),
-      names_to = "sample",
-      values_to = "iBAQ"
-    )
-  } else {
-    ibaq_long <- ibaq
-    if (!is.null(samples)) {
-      ibaq_long <- dplyr::filter(ibaq_long, .data$sample %in% samples)
-    }
-  }
+  ibaq_long <- ibaq_to_long(ibaq, samples)
 
   ibaq_long <- dplyr::filter(ibaq_long, !is.na(.data$iBAQ))
 

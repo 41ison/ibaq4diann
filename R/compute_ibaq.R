@@ -71,21 +71,58 @@
 #' @param output_long `logical(1)`. If `FALSE` (default), return a wide-format
 #'   tibble with one column per sample. If `TRUE`, return a long-format tibble
 #'   with columns `sample` and `iBAQ`.
-#' @param id_col `character(1)`. Name of the protein identifier column in the
-#'   DIA-NN report. Default: `"Protein.Group"`.
+#' @param id_col `character(1)`. Which DIA-NN identifier column defines a
+#'   "protein" for quantification. One of:
+#'   - `"Protein.Group"` (default): protein group, named by its leading
+#'     accession (e.g. `"P04040"`). Matched to FASTA **accessions**.
+#'   - `"Protein.Ids"`: all accessions in the group (e.g.
+#'     `"P0DP23;P0DP24;P0DP25"`). Matched to FASTA accessions; the leading
+#'     member found in the FASTA supplies the denominator.
+#'   - `"Protein.Names"`: UniProt entry names (e.g. `"ALBU_HUMAN"`). Matched
+#'     to FASTA **entry names**.
+#'   - `"Genes"`: gene symbols (e.g. `"ALB"`). Matched to the `GN=` field of
+#'     FASTA headers.
+#'
+#'   See **Choice of protein identifier** in Details — the number of output
+#'   rows depends on this choice.
 #' @param fasta_id_pattern `character(1)` or `NULL`. Custom regex (two capture
-#'   groups) for extracting protein accessions from FASTA headers. When `NULL`
+#'   groups) for extracting protein accessions from FASTA headers. Only used
+#'   when `id_col` is `"Protein.Group"` or `"Protein.Ids"`. When `NULL`
 #'   (default), a built-in pattern handles both UniProt and plain headers
 #'   automatically. See [parse_fasta()] for details.
+#'
+#' @section Choice of protein identifier:
+#' DIA-NN reports four identifier columns that describe the same protein
+#' group at different levels of granularity, so the **number of proteins in
+#' the output differs** depending on `id_col`:
+#'
+#' - `Protein.Ids` is the most granular: groups that share a leading protein
+#'   but differ in their other members (e.g. isoform sets) are kept separate.
+#' - `Protein.Group` and `Protein.Names` are one-to-one with each other.
+#' - `Genes` is the coarsest: distinct protein groups from the same gene
+#'   (e.g. isoforms with distinct accessions) are **merged** and their
+#'   intensities summed. Rows with an empty `Genes` value are dropped with a
+#'   message, since they cannot be matched to the FASTA.
+#'
+#' Identifiers may contain several members separated by `;` (including
+#' contaminant-prefixed members such as `cRAP-P04040`). Members are looked up
+#' in the FASTA in order and the first match — normally the leading protein —
+#' supplies the theoretical peptide count. Identifiers with no member in the
+#' FASTA are excluded with a warning.
+#'
+#' When `id_col = "Genes"`, several FASTA entries may share a gene symbol;
+#' the first entry in file order is used (see [parse_fasta()]).
 #'
 #' @return
 #' A [tibble][tibble::tibble]. The structure depends on `output_long`:
 #'
 #' **Wide format** (`output_long = FALSE`, default):
 #' \describe{
-#'   \item{`protein_id`}{Protein group identifier (from `id_col`).}
-#'   \item{`Protein.Names`}{Full protein name (when present in the report).}
-#'   \item{`Genes`}{Gene name(s) (when present in the report).}
+#'   \item{`protein_id`}{Protein identifier (values of `id_col`).}
+#'   \item{`Protein.Group`, `Protein.Names`, `Genes`}{The other identifier
+#'     columns (whichever are present in the report and not used as
+#'     `id_col`). When several report values map to one `protein_id` (e.g.
+#'     `id_col = "Genes"`), the distinct values are joined with `;`.}
 #'   \item{`n_theoretical_peptides`}{Number of theoretical tryptic peptides
 #'     used as iBAQ denominator.}
 #'   \item{`<sample_1>`, `<sample_2>`, ...}{One column per DIA-NN run
@@ -95,9 +132,9 @@
 #'
 #' **Long format** (`output_long = TRUE`):
 #' \describe{
-#'   \item{`protein_id`}{Protein group identifier.}
-#'   \item{`Protein.Names`}{Full protein name (when present).}
-#'   \item{`Genes`}{Gene name(s) (when present).}
+#'   \item{`protein_id`}{Protein identifier.}
+#'   \item{`Protein.Group`, `Protein.Names`, `Genes`}{Annotation columns, as
+#'     above.}
 #'   \item{`n_theoretical_peptides`}{Theoretical peptide count.}
 #'   \item{`sample`}{Run/sample name.}
 #'   \item{`iBAQ`}{iBAQ value for this protein–sample pair.}
@@ -133,6 +170,13 @@
 #'   output_long = FALSE
 #' )
 #'
+#' # ── Quantify at the gene level instead of the protein group ────────────────
+#' ibaq_genes <- compute_ibaq(
+#'   parquet_path = "report.parquet",
+#'   fasta_path = "UP000031575.fasta",
+#'   id_col = "Genes"
+#' )
+#'
 #' # ── Long format output (tidy) ───────────────────────────────────────────────
 #' ibaq_long <- compute_ibaq(
 #'   parquet_path = "report.parquet",
@@ -158,7 +202,7 @@ compute_ibaq <- function(
   max_missed_cleavages = 0,
   log2_transform = TRUE,
   output_long = FALSE,
-  id_col = "Protein.Group",
+  id_col = c("Protein.Group", "Protein.Ids", "Protein.Names", "Genes"),
   fasta_id_pattern = NULL
 ) {
   stopifnot(
@@ -167,6 +211,8 @@ compute_ibaq <- function(
     file.exists(parquet_path),
     file.exists(fasta_path)
   )
+  id_col <- match.arg(id_col)
+  fasta_id_type <- diann_id_cols[[id_col]]
 
   ## ---- Step 1: Load parquet --------------------------------------------------
   message("\n=== Step 1: Loading DIA-NN report ===")
@@ -205,31 +251,79 @@ compute_ibaq <- function(
   }
 
   ## ---- Step 3: Aggregate intensities to protein × sample --------------------
-  message("\n=== Step 3: Aggregating intensities per protein \u00d7 sample ===")
-
-  # Collect annotation columns that exist in the report
-  annot_cols <- dplyr::intersect(
-    c("Protein.Names", "Genes"),
-    names(report_filtered)
+  message(
+    "\n=== Step 3: Aggregating intensities per protein \u00d7 sample ",
+    "(id_col = '",
+    id_col,
+    "') ==="
   )
 
-  # Build a consistent annotation lookup (one row per protein_id)
+  report_filtered <- dplyr::rename(
+    report_filtered,
+    protein_id = dplyr::all_of(id_col),
+    intensity = dplyr::all_of(intensity_col)
+  )
+
+  # Rows without an identifier (e.g. empty Genes) cannot be matched to the
+  # FASTA and are dropped here
+  no_id <- is.na(report_filtered$protein_id) | report_filtered$protein_id == ""
+  if (any(no_id)) {
+    message(
+      "[compute_ibaq] Dropping ",
+      sum(no_id),
+      " precursor rows with an empty '",
+      id_col,
+      "' value."
+    )
+    report_filtered <- report_filtered[!no_id, ]
+  }
+
+  # Annotation columns: the other identifier columns present in the report.
+  # Several report values may map to a single protein_id (e.g. two protein
+  # groups from one gene), so distinct values are collapsed with ";".
+  annot_cols <- dplyr::intersect(
+    dplyr::setdiff(c("Protein.Group", "Protein.Names", "Genes"), id_col),
+    names(report_filtered)
+  )
   annot_lookup <- report_filtered |>
-    dplyr::select(
-      protein_id = dplyr::all_of(id_col),
-      dplyr::all_of(annot_cols)
-    ) |>
-    dplyr::distinct(.data$protein_id, .keep_all = TRUE)
+    dplyr::distinct(.data$protein_id, dplyr::pick(dplyr::all_of(annot_cols))) |>
+    dplyr::group_by(.data$protein_id) |>
+    dplyr::summarise(
+      dplyr::across(
+        dplyr::all_of(annot_cols),
+        \(x) paste(unique(x[!is.na(x) & x != ""]), collapse = ";")
+      ),
+      .groups = "drop"
+    )
+
+  n_ids <- dplyr::n_distinct(report_filtered$protein_id)
+  n_report_groups <- if ("Protein.Group" %in% names(report_filtered)) {
+    dplyr::n_distinct(report_filtered$Protein.Group)
+  } else {
+    n_ids
+  }
+  if (id_col != "Protein.Group" && n_ids != n_report_groups) {
+    message(
+      "[compute_ibaq] ",
+      n_report_groups,
+      " protein groups in the filtered report correspond to ",
+      n_ids,
+      " distinct '",
+      id_col,
+      "' identifiers",
+      if (n_ids < n_report_groups) {
+        "; intensities of groups sharing an identifier are summed."
+      } else {
+        "."
+      }
+    )
+  }
 
   # Sum intensity per unique stripped peptide per protein × sample, then
   # sum across unique peptides. Using Stripped.Sequence deduplication ensures
   # each peptide is counted once per sample even if observed across multiple
   # charge states or modifications.
   protein_intensity <- report_filtered |>
-    dplyr::rename(
-      protein_id = dplyr::all_of(id_col),
-      intensity = dplyr::all_of(intensity_col)
-    ) |>
     dplyr::group_by(.data$Run, .data$protein_id, .data$Stripped.Sequence) |>
     dplyr::summarise(
       peptide_intensity = sum(.data$intensity, na.rm = TRUE),
@@ -253,7 +347,11 @@ compute_ibaq <- function(
   message(
     "\n=== Step 4: Parsing FASTA & counting theoretical tryptic peptides ==="
   )
-  sequences <- parse_fasta(fasta_path, id_pattern = fasta_id_pattern)
+  sequences <- parse_fasta(
+    fasta_path,
+    id_type = fasta_id_type,
+    id_pattern = fasta_id_pattern
+  )
   theo_peptides <- build_theoretical_peptide_counts(
     sequences,
     protease_regex = protease_regex,
@@ -262,11 +360,27 @@ compute_ibaq <- function(
     max_missed = max_missed_cleavages
   )
 
-  # Check coverage of detected proteins against the FASTA
+  # Match each (possibly ';'-separated) identifier to the FASTA
   detected_proteins <- unique(protein_intensity$protein_id)
-  n_found <- sum(detected_proteins %in% theo_peptides$protein_id)
-  n_missing <- length(detected_proteins) - n_found
+  matched <- match_theoretical_peptides(detected_proteins, theo_peptides)
 
+  n_found <- sum(!is.na(matched$fasta_id))
+  n_missing <- length(detected_proteins) - n_found
+  n_via_member <- sum(
+    !is.na(matched$fasta_id) & matched$fasta_id != matched$protein_id
+  )
+
+  if (n_found == 0) {
+    stop(
+      "None of the ",
+      length(detected_proteins),
+      " detected '",
+      id_col,
+      "' identifiers were found in the FASTA (matched by '",
+      fasta_id_type,
+      "'). Verify that the FASTA matches the search database."
+    )
+  }
   if (n_missing > 0) {
     warning(
       n_missing,
@@ -277,7 +391,7 @@ compute_ibaq <- function(
     message(
       "[compute_ibaq] Proteins not in FASTA (first 10): ",
       paste(
-        utils::head(setdiff(detected_proteins, theo_peptides$protein_id), 10),
+        utils::head(matched$protein_id[is.na(matched$fasta_id)], 10),
         collapse = ", "
       )
     )
@@ -287,14 +401,21 @@ compute_ibaq <- function(
     n_found,
     " / ",
     length(detected_proteins),
-    " detected proteins matched in FASTA."
+    " detected proteins matched in FASTA",
+    if (n_via_member > 0) {
+      paste0(" (", n_via_member, " via a member of a multi-protein identifier)")
+    },
+    "."
   )
 
   ## ---- Step 5: Calculate iBAQ -----------------------------------------------
   message("\n=== Step 5: Computing iBAQ values ===")
 
   ibaq_long <- protein_intensity |>
-    dplyr::left_join(theo_peptides, by = "protein_id") |>
+    dplyr::left_join(
+      dplyr::select(matched, "protein_id", "n_theoretical_peptides"),
+      by = "protein_id"
+    ) |>
     dplyr::left_join(annot_lookup, by = "protein_id") |>
     dplyr::filter(
       !is.na(.data$n_theoretical_peptides),
@@ -321,7 +442,11 @@ compute_ibaq <- function(
       dplyr::select(dplyr::all_of(c(annot_final_cols, "Run", "iBAQ"))) |>
       dplyr::rename(sample = "Run") |>
       dplyr::arrange(.data$protein_id, .data$sample)
-    message("[compute_ibaq] Output: long format — ", nrow(result), " rows.")
+    message(
+      "[compute_ibaq] Output: long format \u2014 ",
+      nrow(result),
+      " rows."
+    )
   } else {
     result <- ibaq_long |>
       dplyr::select(dplyr::all_of(c(annot_final_cols, "Run", "iBAQ"))) |>
@@ -335,7 +460,7 @@ compute_ibaq <- function(
     n_prot <- nrow(result)
     n_samples <- ncol(result) - length(annot_final_cols)
     message(
-      "[compute_ibaq] Output: wide format — ",
+      "[compute_ibaq] Output: wide format \u2014 ",
       n_prot,
       " proteins \u00d7 ",
       n_samples,

@@ -19,7 +19,7 @@ compute_ibaq(
   max_missed_cleavages = 0,
   log2_transform = TRUE,
   output_long = FALSE,
-  id_col = "Protein.Group",
+  id_col = c("Protein.Group", "Protein.Ids", "Protein.Names", "Genes"),
   fasta_id_pattern = NULL
 )
 }
@@ -76,11 +76,26 @@ to the final iBAQ values? Default: \code{TRUE}. Set to \code{FALSE} to return ra
 tibble with one column per sample. If \code{TRUE}, return a long-format tibble
 with columns \code{sample} and \code{iBAQ}.}
 
-\item{id_col}{\code{character(1)}. Name of the protein identifier column in the
-DIA-NN report. Default: \code{"Protein.Group"}.}
+\item{id_col}{\code{character(1)}. Which DIA-NN identifier column defines a
+"protein" for quantification. One of:
+\itemize{
+\item \code{"Protein.Group"} (default): protein group, named by its leading
+accession (e.g. \code{"P04040"}). Matched to FASTA \strong{accessions}.
+\item \code{"Protein.Ids"}: all accessions in the group (e.g.
+\code{"P0DP23;P0DP24;P0DP25"}). Matched to FASTA accessions; the leading
+member found in the FASTA supplies the denominator.
+\item \code{"Protein.Names"}: UniProt entry names (e.g. \code{"ALBU_HUMAN"}). Matched
+to FASTA \strong{entry names}.
+\item \code{"Genes"}: gene symbols (e.g. \code{"ALB"}). Matched to the \verb{GN=} field of
+FASTA headers.
+}
+
+See \strong{Choice of protein identifier} in Details — the number of output
+rows depends on this choice.}
 
 \item{fasta_id_pattern}{\code{character(1)} or \code{NULL}. Custom regex (two capture
-groups) for extracting protein accessions from FASTA headers. When \code{NULL}
+groups) for extracting protein accessions from FASTA headers. Only used
+when \code{id_col} is \code{"Protein.Group"} or \code{"Protein.Ids"}. When \code{NULL}
 (default), a built-in pattern handles both UniProt and plain headers
 automatically. See \code{\link[=parse_fasta]{parse_fasta()}} for details.}
 }
@@ -89,9 +104,11 @@ A \link[tibble:tibble]{tibble}. The structure depends on \code{output_long}:
 
 \strong{Wide format} (\code{output_long = FALSE}, default):
 \describe{
-\item{\code{protein_id}}{Protein group identifier (from \code{id_col}).}
-\item{\code{Protein.Names}}{Full protein name (when present in the report).}
-\item{\code{Genes}}{Gene name(s) (when present in the report).}
+\item{\code{protein_id}}{Protein identifier (values of \code{id_col}).}
+\item{\code{Protein.Group}, \code{Protein.Names}, \code{Genes}}{The other identifier
+columns (whichever are present in the report and not used as
+\code{id_col}). When several report values map to one \code{protein_id} (e.g.
+\code{id_col = "Genes"}), the distinct values are joined with \verb{;}.}
 \item{\code{n_theoretical_peptides}}{Number of theoretical tryptic peptides
 used as iBAQ denominator.}
 \item{\verb{<sample_1>}, \verb{<sample_2>}, ...}{One column per DIA-NN run
@@ -101,9 +118,9 @@ sample. \code{NA} when the protein was not detected in a sample.}
 
 \strong{Long format} (\code{output_long = TRUE}):
 \describe{
-\item{\code{protein_id}}{Protein group identifier.}
-\item{\code{Protein.Names}}{Full protein name (when present).}
-\item{\code{Genes}}{Gene name(s) (when present).}
+\item{\code{protein_id}}{Protein identifier.}
+\item{\code{Protein.Group}, \code{Protein.Names}, \code{Genes}}{Annotation columns, as
+above.}
 \item{\code{n_theoretical_peptides}}{Theoretical peptide count.}
 \item{\code{sample}}{Run/sample name.}
 \item{\code{iBAQ}}{iBAQ value for this protein–sample pair.}
@@ -149,6 +166,31 @@ expression control. \emph{Nature} \strong{473}:337–342.
 }
 }
 }
+\section{Choice of protein identifier}{
+
+DIA-NN reports four identifier columns that describe the same protein
+group at different levels of granularity, so the \strong{number of proteins in
+the output differs} depending on \code{id_col}:
+\itemize{
+\item \code{Protein.Ids} is the most granular: groups that share a leading protein
+but differ in their other members (e.g. isoform sets) are kept separate.
+\item \code{Protein.Group} and \code{Protein.Names} are one-to-one with each other.
+\item \code{Genes} is the coarsest: distinct protein groups from the same gene
+(e.g. isoforms with distinct accessions) are \strong{merged} and their
+intensities summed. Rows with an empty \code{Genes} value are dropped with a
+message, since they cannot be matched to the FASTA.
+}
+
+Identifiers may contain several members separated by \verb{;} (including
+contaminant-prefixed members such as \code{cRAP-P04040}). Members are looked up
+in the FASTA in order and the first match — normally the leading protein —
+supplies the theoretical peptide count. Identifiers with no member in the
+FASTA are excluded with a warning.
+
+When \code{id_col = "Genes"}, several FASTA entries may share a gene symbol;
+the first entry in file order is used (see \code{\link[=parse_fasta]{parse_fasta()}}).
+}
+
 \examples{
 \dontrun{
 # ── Basic usage with default parameters ────────────────────────────────────
@@ -175,6 +217,13 @@ ibaq_raw <- compute_ibaq(
   max_missed_cleavages = 1,
   log2_transform = FALSE,                  # return linear iBAQ
   output_long = FALSE
+)
+
+# ── Quantify at the gene level instead of the protein group ────────────────
+ibaq_genes <- compute_ibaq(
+  parquet_path = "report.parquet",
+  fasta_path = "UP000031575.fasta",
+  id_col = "Genes"
 )
 
 # ── Long format output (tidy) ───────────────────────────────────────────────

@@ -4,14 +4,33 @@
 \alias{parse_fasta}
 \title{Parse a FASTA file into a named character vector}
 \usage{
-parse_fasta(fasta_path, id_pattern = NULL)
+parse_fasta(
+  fasta_path,
+  id_type = c("accession", "entry_name", "gene"),
+  id_pattern = NULL
+)
 }
 \arguments{
 \item{fasta_path}{\code{character(1)}. Path to the FASTA file. May be plain text
 or gzip-compressed (\code{.gz}). The file must exist and be readable.}
 
-\item{id_pattern}{\code{character(1)} or \code{NULL}. A regular expression with \strong{two}
-capture groups used to extract the protein accession from each header line.
+\item{id_type}{\code{character(1)}. Which identifier to use as the sequence
+name. One of:
+\itemize{
+\item \code{"accession"} (default): UniProt accession (\code{ACCESSION} in
+\verb{>db|ACCESSION|ENTRY_NAME}), or the first whitespace-delimited token of
+a plain header. Matches the \code{Protein.Group} / \code{Protein.Ids} columns of a
+DIA-NN report.
+\item \code{"entry_name"}: UniProt entry name (\code{ENTRY_NAME} in
+\verb{>db|ACCESSION|ENTRY_NAME}, e.g. \code{ALBU_HUMAN}). Matches the
+\code{Protein.Names} column.
+\item \code{"gene"}: gene symbol taken from the \verb{GN=} field of the header.
+Matches the \code{Genes} column. Entries without a \verb{GN=} field are dropped.
+}}
+
+\item{id_pattern}{\code{character(1)} or \code{NULL}. Only used when
+\code{id_type = "accession"}. A regular expression with \strong{two} capture groups
+used to extract the accession from each header line:
 \itemize{
 \item Group 1 should capture the accession from UniProt-style headers
 (\verb{>db|ACCESSION|name}).
@@ -24,16 +43,28 @@ used automatically.
 \value{
 A named \code{character} vector where:
 \itemize{
-\item \strong{names} are protein accession identifiers parsed from the FASTA headers.
+\item \strong{names} are protein identifiers of the requested \code{id_type}.
 \item \strong{values} are the corresponding amino-acid sequences as plain strings.
 }
 }
 \description{
 Reads a (possibly gzipped) FASTA file and returns a named character vector
-of amino-acid sequences. Protein identifiers are extracted from the FASTA
-header line using a flexible regular expression that handles both UniProt
-\code{sp}/\code{tr} style headers (\verb{>db|ACCESSION|name ...}) and plain headers
-(\verb{>ACCESSION description ...}).
+of amino-acid sequences. The names are protein identifiers extracted from
+each header line; which identifier is used is controlled by \code{id_type}, so
+the FASTA can be keyed by the same type of identifier as the DIA-NN report
+column chosen in \code{\link[=compute_ibaq]{compute_ibaq()}}.
+
+The parser understands UniProt \code{sp}/\code{tr} style headers
+(\verb{>db|ACCESSION|ENTRY_NAME description OS=... GN=GENE ...}) and plain
+headers (\verb{>ACCESSION description ...}).
+}
+\details{
+Identifiers are not guaranteed to be unique in a FASTA file. In particular,
+several entries (isoforms, unreviewed duplicates) may share the same gene
+symbol. When duplicates occur, only the \strong{first} entry in file order is
+kept and a message reports how many were discarded. UniProt proteome
+downloads list reviewed (\code{sp}) entries before unreviewed (\code{tr}) ones, so
+the reviewed canonical entry is usually the one retained.
 }
 \seealso{
 \code{\link[=build_theoretical_peptide_counts]{build_theoretical_peptide_counts()}}, \code{\link[=compute_ibaq]{compute_ibaq()}}

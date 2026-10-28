@@ -12,6 +12,8 @@ plot_ibaq_pie(
   label_col = "Protein.Names",
   show_labels = TRUE,
   show_names = TRUE,
+  min_label_pct = 1,
+  show_legend = FALSE,
   color_palette = NULL
 )
 }
@@ -35,15 +37,24 @@ collapsed into an "Other" slice. Default: \code{10}.}
 labels. Falls back to \code{"protein_id"} if the column is absent.
 Default: \code{"Protein.Names"}.}
 
-\item{show_labels}{\code{logical(1)}. Show percentage labels on slices?
+\item{show_labels}{\code{logical(1)}. Include the percentage in slice labels?
 Default: \code{TRUE}.}
 
-\item{show_names}{\code{logical(1)}. Show protein name labels for the top-N
-slices using \code{\link[ggrepel:geom_text_repel]{ggrepel::geom_text_repel()}}? Default: \code{TRUE}.}
+\item{show_names}{\code{logical(1)}. Include the protein name in slice labels?
+Default: \code{TRUE}.}
 
-\item{color_palette}{\code{character} or \code{NULL}. A character vector of colours
-(length >= \code{top_n + 1}), or \code{NULL} to use a default pastel palette.
-Default: \code{NULL}.}
+\item{min_label_pct}{\code{numeric(1)}. Slices smaller than this percentage are
+not labelled, to avoid clutter. Default: \code{1}.}
+
+\item{show_legend}{\code{logical(1)}. Show a colour legend? Default: \code{FALSE},
+as the on-plot labels already identify each slice. Useful when
+\code{show_names = FALSE}.}
+
+\item{color_palette}{\code{character} or \code{NULL}. Colours for the protein
+slices: either a named vector (names are protein labels, optionally
+including \code{"Other"}) or an unnamed vector that is recycled over the
+proteins in order of first appearance. When \code{NULL} (default), a
+qualitative palette is used and "Other" is drawn in grey.}
 }
 \value{
 A \code{\link[ggplot2:ggplot]{ggplot2}} object.
@@ -56,9 +67,11 @@ sample abundance:
 \deqn{\text{riBAQ}_i = \frac{\text{iBAQ}_i}{\sum_j \text{iBAQ}_j} \times 100}
 
 Only the \code{top_n} most-abundant proteins are shown as individual slices;
-the remaining proteins are grouped into an "Other" category. Optionally,
-protein names (or gene symbols) can be displayed on the slices using
-\code{\link[ggrepel:geom_text_repel]{ggrepel::geom_text_repel()}}.
+the remaining proteins are grouped into a neutral grey "Other" slice.
+Slices are annotated with the protein name and/or percentage. Labels are
+placed beside the pie with leader lines (via
+\code{\link[ggrepel:geom_text_repel]{ggrepel::geom_text_repel()}}) so that they remain legible even when many
+slices are thin.
 }
 \examples{
 \dontrun{

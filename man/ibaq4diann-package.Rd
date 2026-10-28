@@ -19,5 +19,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Alison Chaves \email{felipealison@gmail.com}
 
+Authors:
+\itemize{
+  \item Alison Chaves \email{felipealison@gmail.com}
+}
+
 }
 \keyword{internal}
