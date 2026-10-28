@@ -1,6 +1,6 @@
 Package: ibaq4diann
 Title: iBAQ Calculation from DIA-NN Proteomics Reports
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person(
         given = "Alison",
@@ -15,13 +15,13 @@ Description: Computes intensity-Based Absolute Quantification (iBAQ) values
     filtering of DIA-NN reports, and flexible output formats. Also provides
     plotting utilities for visualising protein abundance ranks, distributions,
     sample correlations, and dynamic range.
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports:
     arrow,
     dplyr,
+    tibble,
     tidyr,
     stringr,
     ggplot2,
@@ -41,3 +41,4 @@ VignetteBuilder: knitr
 URL: https://github.com/AlisonChaves/ibaq4diann
 BugReports: https://github.com/AlisonChaves/ibaq4diann/issues
 Additional_repositories: https://bioconductor.org/packages/release/bioc
+Config/roxygen2/version: 8.1.0

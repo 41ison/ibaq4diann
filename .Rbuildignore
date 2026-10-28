@@ -1,7 +1,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
-^NEWS\.md$
 ^\.github$
 ^\.gitignore$
 ^codecov\.yml$
+^LICENSE\.md$
+^README\.html$
