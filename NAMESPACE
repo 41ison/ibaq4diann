@@ -9,20 +9,26 @@ export(plot_ibaq_pca)
 export(plot_ibaq_pie)
 export(plot_ibaq_rank)
 export(run_ibaq_pipeline)
-importFrom(dplyr,all_of)
-importFrom(dplyr,arrange)
-importFrom(dplyr,distinct)
-importFrom(dplyr,filter)
-importFrom(dplyr,group_by)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(dplyr,n_distinct)
-importFrom(dplyr,rename)
-importFrom(dplyr,select)
-importFrom(dplyr,setdiff)
-importFrom(dplyr,summarise)
+importFrom(dplyr,
+  all_of,
+  arrange,
+  distinct,
+  filter,
+  group_by,
+  left_join,
+  mutate,
+  n_distinct,
+  rename,
+  select,
+  setdiff,
+  summarise
+)
 importFrom(rlang,.data)
-importFrom(stringr,str_extract)
-importFrom(stringr,str_match)
-importFrom(tidyr,pivot_longer)
-importFrom(tidyr,pivot_wider)
+importFrom(stringr,
+  str_extract,
+  str_match
+)
+importFrom(tidyr,
+  pivot_longer,
+  pivot_wider
+)
